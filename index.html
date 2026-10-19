@@ -24,6 +24,19 @@
     />
     <!-- Link your CSS file here -->
     <link rel="stylesheet" href="style.css" />
+
+    <!-- EmailJS SDK -->
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+    ></script>
+    <script type="text/javascript">
+      (function () {
+        emailjs.init({
+          publicKey: "BQexvi0TQXFdJyQld",
+        });
+      })();
+    </script>
   </head>
   <body>
     <!-- NAVBAR -->
@@ -914,8 +927,8 @@
                     href="https://t.me/asheprivate"
                     target="_blank"
                     class="social-icon-btn"
-                    aria-label="Telegram"
                     title="Telegram"
+                    aria-label="Telegram"
                     ><i class="fa-brands fa-telegram"></i
                   ></a>
                   <a
@@ -940,10 +953,11 @@
             </div>
           </div>
 
-          <!-- Contact Form -->
+          <!-- Contact Form with hidden time field for EmailJS -->
           <div class="col-lg-7">
             <div class="glass-card p-4 p-md-5">
               <form id="contactForm" novalidate>
+                <input type="hidden" name="time" />
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label for="name" class="form-label small fw-semibold"
@@ -953,6 +967,7 @@
                       type="text"
                       class="form-control form-control-custom"
                       id="name"
+                      name="from_name"
                       required
                       placeholder="John Doe"
                     />
@@ -965,6 +980,7 @@
                       type="email"
                       class="form-control form-control-custom"
                       id="email"
+                      name="from_email"
                       required
                       placeholder="john@example.com"
                     />
@@ -977,6 +993,7 @@
                       type="text"
                       class="form-control form-control-custom"
                       id="subject"
+                      name="subject"
                       required
                       placeholder="Project Inquiry / Job Opportunity"
                     />
@@ -988,6 +1005,7 @@
                     <textarea
                       class="form-control form-control-custom"
                       id="message"
+                      name="message"
                       rows="5"
                       required
                       placeholder="Write your message here..."
