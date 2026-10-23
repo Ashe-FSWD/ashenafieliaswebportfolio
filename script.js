@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeIcon = document.getElementById("themeIcon");
   const htmlElement = document.documentElement;
 
-  // Check stored theme or system preference
   const savedTheme = localStorage.getItem("theme") || "dark";
   htmlElement.setAttribute("data-bs-theme", savedTheme);
   updateThemeIcon(savedTheme);
@@ -26,11 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateThemeIcon(theme) {
     if (!themeIcon) return;
-    if (theme === "dark") {
-      themeIcon.classList.replace("fa-sun", "fa-moon");
-    } else {
-      themeIcon.classList.replace("fa-moon", "fa-sun");
-    }
+
+    themeIcon.classList.toggle("fa-moon", theme === "dark");
+    themeIcon.classList.toggle("fa-sun", theme !== "dark");
   }
 
   // 2. Project Filtering Functionality
@@ -39,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   filterButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      // Remove active class from all buttons
       filterButtons.forEach((btn) => btn.classList.remove("active"));
       button.classList.add("active");
 
@@ -47,11 +43,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       projectItems.forEach((item) => {
         const categories = item.getAttribute("data-category");
+
         if (
           filterValue === "all" ||
           (categories && categories.includes(filterValue))
         ) {
           item.style.display = "block";
+
           setTimeout(() => {
             item.style.opacity = "1";
             item.style.transform = "scale(1)";
@@ -59,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           item.style.opacity = "0";
           item.style.transform = "scale(0.95)";
+
           setTimeout(() => {
             item.style.display = "none";
           }, 300);
@@ -69,9 +68,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 3. Resume Modal Quick View Handler
   const viewResumeBtn = document.getElementById("viewResumeBtn");
+
   if (viewResumeBtn) {
     viewResumeBtn.addEventListener("click", () => {
       const resumeModalElement = document.getElementById("resumeModal");
+
       if (resumeModalElement && window.bootstrap) {
         const resumeModal = new bootstrap.Modal(resumeModalElement);
         resumeModal.show();
@@ -79,86 +80,128 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4. EmailJS Contact Form Integration with Seamless Simulation Fallback
+  // 4. EmailJS Contact Form Integration
   const contactForm = document.getElementById("contactForm");
   const formAlert = document.getElementById("formAlert");
 
   if (contactForm) {
-    // Inject dynamic ISO timestamp into hidden input field on load
     const timeInput = contactForm.querySelector('input[name="time"]');
+
     if (timeInput) {
       timeInput.value = new Date().toLocaleString();
     }
 
-    contactForm.addEventListener("submit", function (e) {
+    contactForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Basic HTML5 Validity Check
+      // Validate the form
       if (!contactForm.checkValidity()) {
         contactForm.classList.add("was-validated");
         return;
       }
 
+      // Check that the EmailJS SDK is loaded
+      if (
+        typeof emailjs === "undefined" ||
+        typeof emailjs.sendForm !== "function"
+      ) {
+        showFormAlert(
+          "danger",
+          "Email service is unavailable. Please refresh the page and try again.",
+        );
+
+        console.error("EmailJS SDK is not loaded.");
+        return;
+      }
+
       const submitBtn = contactForm.querySelector('button[type="submit"]');
+
+      if (!submitBtn) {
+        console.error("Contact form submit button was not found.");
+        return;
+      }
+
       const originalBtnText = submitBtn.innerHTML;
 
-      // Loading State
+      // EmailJS configuration
+      const SERVICE_ID = "service_Ashe_123";
+      const TEMPLATE_ID = "template_vahcwzh";
+
+      // Show sending state
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Sending...`;
+      submitBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2" ' +
+        'role="status" aria-hidden="true"></span>Sending...';
 
       if (formAlert) {
         formAlert.classList.add("d-none");
       }
 
-      // EmailJS Configuration Keys (Verified Case-Sensitive Identifiers)
-      const SERVICE_ID = "service_Ashe_123";
-      const TEMPLATE_ID = "template_vahcwzh";
+      try {
+        // Send the actual form data through EmailJS
+        const response = await emailjs.sendForm(
+          SERVICE_ID,
+          TEMPLATE_ID,
+          contactForm,
+        );
 
-      // Helper function to trigger seamless success state
-      const triggerSuccessUI = () => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
+        console.log("EmailJS response:", response.status, response.text);
 
-        if (formAlert) {
-          formAlert.className =
-            "alert alert-success mt-3 mb-0 rounded-3 shadow-sm";
-          formAlert.innerHTML = `<i class="fa-solid fa-circle-check me-2"></i>Thank you! Your message has been sent successfully.`;
-          formAlert.classList.remove("d-none");
-        }
+        // Show success ONLY after EmailJS confirms success
+        showFormAlert(
+          "success",
+          "Thank you! Your message has been sent successfully.",
+        );
 
         contactForm.reset();
         contactForm.classList.remove("was-validated");
 
-        // Reset timestamp for subsequent submissions
         if (timeInput) {
           timeInput.value = new Date().toLocaleString();
         }
 
-        // Auto-hide success alert after 6 seconds
+        // Hide the success message after 6 seconds
         setTimeout(() => {
-          if (formAlert) formAlert.classList.add("d-none");
+          if (formAlert) {
+            formAlert.classList.add("d-none");
+          }
         }, 6000);
-      };
+      } catch (error) {
+        // Do not simulate success when the email fails
+        console.error("EmailJS failed to send the email:", error);
 
-      // Attempt sending through standard EmailJS browser SDK
-      emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, contactForm).then(
-        (response) => {
-          // Real success
-          triggerSuccessUI();
-        },
-        (error) => {
-          // If EmailJS blocks or fails (domain limit / network error), gracefully simulate success for seamless UX
-          setTimeout(() => {
-            triggerSuccessUI();
-          }, 800);
-        }
-      ).catch((err) => {
-        // Fallback catch to ensure seamless simulation under any circumstance
-        setTimeout(() => {
-          triggerSuccessUI();
-        }, 800);
-      });
+        const errorMessage =
+          error?.text ||
+          error?.message ||
+          "Unknown error. Check the browser console and EmailJS dashboard.";
+
+        showFormAlert(
+          "danger",
+          "Your message was not sent. Please try again or email " +
+            "ashenafieliascs@gmail.com directly.",
+        );
+
+        console.error("EmailJS error details:", errorMessage);
+      } finally {
+        // Always restore the submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
     });
+  }
+
+  // Display contact form feedback
+  function showFormAlert(type, message) {
+    if (!formAlert) {
+      console.log(message);
+      return;
+    }
+
+    formAlert.className = `alert alert-${type} mt-3 mb-0 rounded-3 shadow-sm`;
+
+    formAlert.textContent = message;
+    formAlert.classList.remove("d-none");
+    formAlert.setAttribute("role", "alert");
   }
 
   // 5. Navbar Smooth Scroll Active Link Highlighting
@@ -167,9 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("scroll", () => {
     let current = "";
+
     sections.forEach((section) => {
       const sectionTop = section.offsetTop;
-      const sectionHeight = section.clientHeight;
+
       if (window.scrollY >= sectionTop - 120) {
         current = section.getAttribute("id");
       }
@@ -177,6 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     navLinks.forEach((link) => {
       link.classList.remove("active");
+
       if (link.getAttribute("href") === `#${current}`) {
         link.classList.add("active");
       }
