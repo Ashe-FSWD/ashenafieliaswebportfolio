@@ -437,7 +437,47 @@ h6 {
   outline: none;
 }
 
-/* Responsive Media Queries (Custom Fine-tuning) */
+/* Container for the avatar */
+.profile-avatar-container {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* ==========================================================================
+   FIXED TABLET MEDIA QUERY (iPad Mini 768px & Surface Pro up to 1024px)
+   ========================================================================== */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+  /* Force skills section container items to stack evenly in 2 columns */
+  #skills .row > div {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .hero-section {
+    padding-top: 120px;
+    text-align: center;
+  }
+
+  .hero-btns {
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES (General Devices)
+   ========================================================================== */
 @media (max-width: 991.98px) {
   .hero-section {
     text-align: center;
@@ -476,23 +516,4 @@ h6 {
     right: -38px;
     font-size: 0.65rem;
   }
-}
-
-/* Container for the avatar */
-.profile-avatar-container {
-  width: 180px; /* Adjust size as needed */
-  height: 180px; /* Must equal width for a perfect circle */
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* The actual image */
-.profile-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Ensures the image fills the circle without distortion */
-  object-position: center top; /* Adjusts framing (e.g., shifts focus toward the top/face) */
 }
